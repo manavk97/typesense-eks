@@ -75,6 +75,119 @@ This README provides step-by-step instructions for setting up an Amazon EKS (Ela
 
 3. Follow the output to ensure each step completes successfully
 
+# Database Setup
+
+Follow these steps to deploy Typesense using Kustomize:
+
+1. **Review Configuration**
+   - Navigate to the `application` directory
+   - Check the following files:
+     - `kustomization.yaml`: Main configuration file
+    
+
+2. **Configure Typesense Settings**
+   - modify the values in kustomization.yaml to match your desired configuration for each environment
+
+3. **Set Up Secrets**
+   - check the updated yaml files by running `kubectl kustomize environment/development/.` or `kubectl kustomize environment/production/.`
+   - verify udpated yaml configuration as per your requirements
+
+4. **Deploy Typesense**
+  ```bash
+   # Deploy to development environment
+   kubectl apply -k environment/development/.
+   
+   # Deploy to production environment
+   kubectl apply -k environment/production/.
+   
+   # Verify the deployment
+   kubectl get pods -n your-namespace       # Check pod status
+   kubectl get pvc -n your-namespace        # Verify storage provisioning
+   kubectl get svc -n your-namespace        # Check service creation
+   kubectl get ingress -n your-namespace    # Verify ingress configuration
+   ```
+5. **Access Typesense**
+   - The service will be exposed via AWS Load Balancer
+   - check the ingress.yaml file to get the endpoint
+
+6. **Monitoring**
+   - Check cluster health:
+     ```bash
+     kubectl exec -it typesense-0 -n your-namespace -- curl http://localhost:8108/health
+     ```
+   - View logs:
+     ```bash
+     kubectl logs -f typesense-0 -n your-namespace
+     ```
+7. **CI/CD Pipeline Setup**
+   - The repository includes a GitHub Actions workflow in `.github/workflows/aws.yml`
+   - The pipeline automatically deploys Typesense when changes are pushed:
+     ```yaml
+     # Example workflow configuration
+     name: Deploy to EKS
+
+   on:
+   push:
+      branches: [ development ]
+
+   jobs:
+
+   build:
+      
+      name: Deployment
+      runs-on: ubuntu-latest
+      environment: ${{ github.ref == 'refs/heads/main' && 'production' || 'development' }}
+      
+      steps:
+
+      - name: Set short git commit SHA
+         id: commit
+         uses: prompt/actions-commit-hash@v2
+
+      - name: Check out code
+         uses: actions/checkout@v2
+      
+      - name: Configure AWS credentials
+         uses: aws-actions/configure-aws-credentials@v1
+         with:
+         aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+         aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+         aws-region: ${{ secrets.AWS_REGION }}
+
+      - name: Login to Amazon ECR
+         id: login-ecr
+         uses: aws-actions/amazon-ecr-login@v1
+
+      - name: Update kube config
+         env:
+         EKS_CLUSTER_NAME: ${{ secrets.EKS_CLUSTER_NAME }}
+         AWS_REGION: ${{ secrets.AWS_REGION }}
+         
+         run: aws eks update-kubeconfig --name $EKS_CLUSTER_NAME --region $AWS_REGION
+
+      - name: Deploy to EKS
+         run: |
+         kubectl apply -k  environments/${{ github.ref == 'refs/heads/main' && 'production' || 'development' }}/.
+     ```
+
+   Required GitHub Secrets:
+   - `AWS_ACCESS_KEY_ID`: AWS IAM user access key
+   - `AWS_SECRET_ACCESS_KEY`: AWS IAM user secret key
+   - `EKS_CLUSTER_NAME`: EKS cluster name
+   - `AWS_REGION`: AWS region
+   
+   Pipeline Features:
+   - Automatic deployment on push to main branch
+   - Environment-based deployment (development/production)
+   - AWS credentials management
+   - Kubernetes configuration updates
+   
+   To set up the pipeline:
+   1. Configure AWS IAM user with required permissions
+   2. Add AWS credentials to GitHub repository secrets
+   3. Update environment variables in workflow file
+   4. Enable GitHub Actions in your repository
+
 ## Troubleshooting
 
 - If any step fails, review the error messages and ensure all prerequisites are met
