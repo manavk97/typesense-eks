@@ -17,19 +17,33 @@ This README provides step-by-step instructions for setting up an Amazon EKS (Ela
 
 1. **Set Environment Variables**
    - Open `setup_eks_cluster.sh` and update the following variables:
-     - `CLUSTER_NAME`: Set your desired cluster name
-     - `REGION`: Set your desired AWS region
-     - `ACCOUNT_ID`: Replace with your AWS account ID
+     - `CLUSTER_NAME`: Set your desired cluster name (e.g., "sample")
+     - `REGION`: Set your desired AWS region (e.g., "us-east-1")
+     - `ACCOUNT_ID`: Replace with your AWS account ID (e.g., "12345678")
+     - `VERSION`: Set Kubernetes version (e.g., "1.31")
+     
+   - Node Group Settings:
+     - `WORKER_NODE_TYPE`: Instance type for worker nodes (e.g., "r6i.xlarge")
+     - `WORKER_NODES`: Initial number of nodes (e.g., 2)
+     - `WORKER_NODES_MIN`: Minimum nodes for autoscaling (e.g., 1)
+     - `WORKER_NODES_MAX`: Maximum nodes for autoscaling (e.g., 5)
+     - `NODE_GROUP_NAME`: Name of the node group (e.g., "standard-workers")
 
 2. **Create EKS Cluster**
-   - Ensure you have the `1.cluster.yaml` file in the `development` directory
-   - Modify the `1.cluster.yaml` file to match your specific requirements (e.g., node type, count, region)
-   - The script will create the EKS cluster and node group based on this configuration
+   - The cluster configuration includes:
+     - VPC with public and private subnets
+     - Managed node groups
+     - Cluster addons (CoreDNS, kube-proxy, vpc-cni)
+     - IAM roles and policies
+   - Review the generated `cluster.yaml` before proceeding
 
-3. **Update EKS Cluster**
-   - Ensure you have the `2.nodegroup.yaml` file in the `development` directory
-   - Review and modify the `2.nodegroup.yaml` file to match your specific requirements (e.g., node group name, instance types, scaling configuration)
-   - The script will update the cluster and node group configurations based on this file
+3. **Configure Node Groups**
+   - Node group configuration includes:
+     - Instance type (`WORKER_NODE_TYPE`)
+     - Auto-scaling settings (min: `WORKER_NODES_MIN`, max: `WORKER_NODES_MAX`)
+     - Node labels and taints
+     - IAM instance profile
+   - The node group will be created as part of the cluster deployment
 
 4. **Associate IAM OIDC Provider**
    - This step associates an IAM OIDC provider with your cluster
