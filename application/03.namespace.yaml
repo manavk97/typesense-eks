@@ -1,0 +1,7 @@
+# Namespace definition for the Typesense experiment environment
+# This namespace isolates all Typesense-related resources (pods, services, configs)
+# and provides a logical boundary for the search engine deployment
+apiVersion: v1         
+kind: Namespace        
+metadata:              
+  name: experiment    

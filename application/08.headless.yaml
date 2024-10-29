@@ -1,0 +1,38 @@
+# Headless Service definition for Typesense StatefulSet
+# Provides network identity to each pod in the StatefulSet
+# Enables direct pod-to-pod communication for cluster formation
+
+# apiVersion: Specifies which version of the Kubernetes API to use
+apiVersion: v1
+
+# kind: Defines this as a Service resource
+# Services provide stable networking for pods
+kind: Service
+
+# metadata: Resource identification and configuration
+metadata:
+  # name: Referenced by StatefulSet's serviceName field
+  name: service
+  # namespace: Must match the StatefulSet's namespace
+  namespace: experiment
+
+# spec: The desired state for the Service
+spec:
+  # publishNotReadyAddresses: Publish addresses for pods that aren't ready
+  # Important for StatefulSet cluster bootstrap process
+  publishNotReadyAddresses: true
+
+  # clusterIP: None makes this a "headless" service
+  # No load-balancing, returns individual pod IPs
+  clusterIP: None
+
+  # selector: Determines which pods are part of this service
+  # Matches the labels defined in the StatefulSet
+  selector:
+    app: typesense
+
+  # ports: Define which ports are exposed by this service
+  ports:
+    - name: http              # Port name matches container port name
+      port: 8108             # Service port
+      targetPort: http       # References named port in pod spec

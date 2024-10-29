@@ -1,0 +1,66 @@
+# Ingress definition for AWS Application Load Balancer (ALB)
+# Provides external HTTPS access to both Typesense API and Dashboard
+# Manages SSL termination and routing based on hostnames
+
+# apiVersion: Specifies the Kubernetes Networking API version
+apiVersion: networking.k8s.io/v1
+
+# kind: Defines this as an Ingress resource
+kind: Ingress
+
+# metadata: Resource identification and ALB-specific configuration
+metadata:
+  name: shared-alb-ingress
+  namespace: experiment
+  # annotations: Configure AWS ALB behavior
+  annotations:
+    # Basic ALB Configuration
+    alb.ingress.kubernetes.io/load-balancer-name: "sample-ts-alb"   # Name of the ALB
+    alb.ingress.kubernetes.io/scheme: internet-facing               # External access
+    alb.ingress.kubernetes.io/target-type: ip                      # Route to pod IPs
+    alb.ingress.kubernetes.io/group.name: sample-ts                # ALB group name
+
+    # Health Check Configuration
+    alb.ingress.kubernetes.io/healthcheck-protocol: HTTP           # Health check method
+    alb.ingress.kubernetes.io/healthcheck-port: traffic-port       # Use service port
+    alb.ingress.kubernetes.io/healthcheck-interval-seconds: "15"   # Check frequency
+    alb.ingress.kubernetes.io/healthcheck-timeout-seconds: "5"     # Timeout period
+    alb.ingress.kubernetes.io/healthy-threshold-count: "5"         # Success threshold
+    alb.ingress.kubernetes.io/unhealthy-threshold-count: "5"       # Failure threshold
+    alb.ingress.kubernetes.io/healthcheck-path: /health           # Health check endpoint
+
+    # SSL/TLS Configuration
+    alb.ingress.kubernetes.io/listen-ports: '[{"HTTP": 80}, {"HTTPS":443}]'  # Ports to expose
+    alb.ingress.kubernetes.io/certificate-arn: arn-1, arn-2  # SSL certificates
+    alb.ingress.kubernetes.io/ssl-redirect: "443"                  # Force HTTPS
+
+# spec: The desired state for the Ingress
+spec:
+  # ingressClassName: Specifies the controller to implement this Ingress
+  ingressClassName: alb
+
+  # rules: Define how traffic should be routed based on host and path
+  rules:
+    # Dashboard Route
+    - host: "dashboard.example.com"    # Dashboard hostname
+      http:
+        paths:
+          - path: /                    # Root path
+            pathType: Prefix           # Match this path and all sub-paths
+            backend:
+              service:
+                name: dashboard-service # Route to dashboard service
+                port:
+                  number: 8100         # Dashboard service port
+
+    # API Route
+    - host: "api.example.com"         # API hostname
+      http:
+        paths:
+          - path: /                   # Root path
+            pathType: Prefix          # Match this path and all sub-paths
+            backend:
+              service:
+                name: exposed-service  # Route to Typesense service
+                port:
+                  number: 8108        # Typesense API port

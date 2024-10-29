@@ -1,0 +1,33 @@
+# NodePort Service definition for Typesense Dashboard
+# Exposes the dashboard web interface to external users
+# Routes traffic to the dashboard deployment pods
+
+# apiVersion: Specifies which version of the Kubernetes API to use
+apiVersion: v1
+
+# kind: Defines this as a Service resource
+# Services provide stable networking and exposure for pods
+kind: Service
+
+# metadata: Resource identification and configuration
+metadata:
+  name: dashboard-service    # Name of the service
+  namespace: experiment     # Must match other Typesense resources
+
+# spec: The desired state for the Service
+spec:
+  # type: NodePort makes the service accessible from outside the cluster
+  # Creates a port mapping on every node in the cluster
+  type: NodePort
+
+  # selector: Determines which pods receive traffic
+  # Matches the labels from dashboard deployment
+  selector:
+    app: dashboard
+
+  # ports: Define the port mapping for the service
+  ports:
+  - name: dashboard         # Descriptive name for the port
+    port: 8100             # Port exposed internally in the cluster
+    targetPort: 80         # Port on the dashboard pod (standard HTTP)
+    protocol: TCP          # Network protocol to use

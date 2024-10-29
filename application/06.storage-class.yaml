@@ -1,0 +1,43 @@
+# StorageClass definition for Typesense persistent storage on AWS EBS
+# Configures how persistent volumes are dynamically provisioned
+
+# apiVersion: Specifies which version of the Kubernetes Storage API to use
+# storage.k8s.io/v1 is the stable storage API group
+apiVersion: storage.k8s.io/v1
+
+# kind: Defines the type of Kubernetes resource being created
+# StorageClass defines a class of storage with specific properties
+kind: StorageClass
+
+# metadata: Contains identifying information about the resource
+metadata:
+  # name: The identifier for this storage class
+  # Will be referenced by PersistentVolumeClaims
+  name: typesense-storage
+
+# provisioner: Specifies which volume plugin to use for provisioning
+# ebs.csi.aws.com is the AWS EBS CSI driver
+provisioner: ebs.csi.aws.com
+
+# parameters: Configuration options for the provisioner
+parameters:
+  # type: Specifies the EBS volume type
+  # gp3 is AWS's general purpose SSD offering
+  type: gp3
+
+# reclaimPolicy: Defines what happens to volumes when their claims are deleted
+# Retain means the volume will not be automatically deleted
+reclaimPolicy: Retain
+
+# allowVolumeExpansion: Whether volumes can be expanded after creation
+# true allows for online volume resizing
+allowVolumeExpansion: true
+
+# mountOptions: Additional options to use when mounting volumes
+mountOptions:
+  - debug
+
+# volumeBindingMode: Defines when volume binding and dynamic provisioning occurs
+# Immediate means volumes are provisioned/bound immediately when PVC is created
+volumeBindingMode: Immediate
+

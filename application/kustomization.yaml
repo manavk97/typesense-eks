@@ -1,0 +1,11 @@
+resources:
+  - 03.namespace.yaml
+  - 04.config.yaml
+  - 05.secrets.yaml
+  - 06.storage-class.yaml
+  - 07.statefulsets.yaml
+  - 08.headless.yaml
+  - 09.service.yaml
+  - 10.dashboard-deployment.yaml
+  - 11.dashboard-service.yaml
+  - 12.ingress.yaml

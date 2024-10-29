@@ -1,0 +1,48 @@
+# Deployment definition for Typesense Dashboard UI
+# Provides a web interface for managing and monitoring the Typesense cluster
+# Uses a stateless deployment with multiple replicas for high availability
+
+# apiVersion: Specifies which version of the Kubernetes Apps API to use
+apiVersion: apps/v1
+
+# kind: Defines this as a Deployment
+# Deployments are suitable for stateless applications
+kind: Deployment
+
+# metadata: Resource identification and configuration
+metadata:
+  name: dashboard           # Name of the deployment
+  namespace: experiment     # Must match other Typesense resources
+
+# spec: The desired state for the Deployment
+spec:
+  # selector: Determines which pods are managed by this deployment
+  selector:
+    matchLabels:
+      app: dashboard
+
+  # replicas: Number of dashboard instances to run
+  # Multiple replicas provide high availability
+  replicas: 2
+
+  # template: Defines the pod template for creating dashboard instances
+  template:
+    metadata:
+      labels:
+        app: dashboard     # Must match selector.matchLabels
+    spec:
+      containers:
+        - name: dashboard-container
+          # image: Uses the Typesense Dashboard from GitHub Container Registry
+          image: ghcr.io/bfritscher/typesense-dashboard:latest
+          
+          # resources: Define container resource limits
+          resources:
+            limits:
+              memory: "128Mi"    # Maximum memory allocation
+              cpu: "500m"        # Maximum CPU usage (500 millicores = 0.5 CPU)
+          
+          # ports: Container ports to expose
+          ports:
+            - name: http-dashboard
+              containerPort: 80  # Standard HTTP port for web interface

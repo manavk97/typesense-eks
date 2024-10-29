@@ -1,0 +1,10 @@
+# ConfigMap storing Typesense cluster node addresses
+# Format: [pod-name].service.[namespace].svc.cluster.local:[api-port]:[peering-port]
+# Used by Typesense pods to discover and communicate with other nodes in the cluster
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: nodeslist
+  namespace: experiment
+data:
+  nodes: "typesense-0.service.experiment.svc.cluster.local:8107:8108,typesense-1.service.experiment.svc.cluster.local:8107:8108,typesense-2.service.experiment.svc.cluster.local:8107:8108"

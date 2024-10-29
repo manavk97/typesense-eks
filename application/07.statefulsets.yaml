@@ -1,0 +1,104 @@
+# StatefulSet definition for Typesense search engine cluster
+# Manages the deployment and scaling of a stateful application
+
+# apiVersion: Specifies which version of the Kubernetes Apps API to use
+apiVersion: apps/v1
+
+# kind: Defines this as a StatefulSet - used for stateful applications
+kind: StatefulSet
+
+# metadata: Resource identification and configuration
+metadata:
+  name: typesense                # Name of the StatefulSet
+  namespace: experiment          # Namespace where this will be deployed
+  labels:
+    app: typesense              # Label to identify this application
+
+# spec: The desired state for the StatefulSet
+spec:
+  serviceName: service          # Headless service that controls the network domain
+  podManagementPolicy: Parallel # Pods can be created/deleted in parallel
+  replicas: 3                   # Number of desired pods in the cluster
+
+  # selector: Determines which pods are managed by this StatefulSet
+  selector:
+    matchLabels:
+      app: typesense
+
+  # template: Defines the pod template used to create new pods
+  template:
+    metadata:
+      labels:
+        app: typesense
+    spec:
+      # securityContext: Define permission and access control
+      securityContext:
+        fsGroup: 1000           # File system group ID
+        runAsUser: 1000         # User ID to run the container
+        runAsGroup: 1000        # Group ID to run the container
+        runAsNonRoot: true      # Security best practice: don't run as root
+
+      terminationGracePeriodSeconds: 300  # Time for graceful shutdown
+
+      # containers: List of containers in the pod
+      containers:
+        - name: typesense-container
+          image: typesense/typesense:27.1
+          # command: Typesense server startup configuration
+          command:
+            - "/opt/typesense-server"
+            - "-d"                           # Data directory
+            - "/usr/share/typesense/data"
+            - "-a"                           # API key
+            - "sample-api-key"
+            - "--api-port"
+            - "8108"
+            - "--peering-port"               # For inter-node communication
+            - "8107"
+            - "--nodes"                      # Node configuration file
+            - "/usr/share/typesense/nodes"
+            - "--reset-peers-on-error"
+            - "true"
+            - "--enable-cors"
+            - "true"
+
+          ports:
+            - containerPort: 8108
+              name: http
+
+          # Resource limits and requests
+          resources:
+            requests:
+              memory: 100Mi
+              cpu: "500m"
+            limits:
+              memory: 256Mi
+              cpu: "1"
+
+          # volumeMounts: Where to mount the volumes in container
+          volumeMounts:
+            - name: nodeslist               # ConfigMap volume
+              mountPath: /usr/share/typesense
+            - name: data                    # Persistent storage
+              mountPath: /usr/share/typesense/data
+
+      # volumes: Define volumes available to the pod
+      volumes:
+        - name: nodeslist                   # Volume for cluster configuration
+          configMap:
+            name: nodeslist
+            items:
+              - key: nodes
+                path: nodes
+
+  # volumeClaimTemplates: Template for persistent storage
+  volumeClaimTemplates:
+    - metadata:
+        name: data
+      spec:
+        accessModes:
+          - ReadWriteOnce                   # Single node read/write access
+        storageClassName: typesense-storage # References our StorageClass
+        resources:
+          requests:
+            storage: 5Gi                    # Size of persistent volume

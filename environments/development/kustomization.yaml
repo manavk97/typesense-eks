@@ -1,0 +1,75 @@
+# Kustomization configuration for development environment
+# This file customizes the base Typesense configuration for development use
+# Using strategic merge patches to modify specific values
+
+# apiVersion: Specifies the Kustomize API version
+apiVersion: kustomize.config.k8s.io/v1beta1
+
+# kind: Defines this as a Kustomization resource
+kind: Kustomization
+
+# resources: Specifies the base configuration to be customized
+resources:
+  - ../../application    # Points to the base Typesense application manifests
+
+# namespace: Sets the namespace for all resources
+namespace: development   # All resources will be created in the development namespace
+
+# patches: Define modifications to the base resources
+patches:
+  # ConfigMap Patch: Update the Typesense node list
+  - target:
+      kind: ConfigMap
+      name: nodeslist
+    patch: |-
+      - op: replace
+        path: /data/nodes
+        value: "typesense-0.service.development.svc.cluster.local:8107:8108,typesense-1.service.development.svc.cluster.local:8107:8108,typesense-2.service.development.svc.cluster.local:8107:8108"
+
+  # Secret Patch: Set the development API key
+  - target:
+      kind: Secret
+      name: secret
+    patch: |-
+      - op: replace
+        path: /data/api-key
+        value: "dev"
+
+  # StatefulSet Patch: Configure development-specific settings
+  - target:
+      kind: StatefulSet
+      name: typesense
+    patch: |-
+      # Cluster size configuration
+      - op: replace
+        path: /spec/replicas
+        value: 3                           # Run 3 Typesense nodes
+
+      # Container image configuration
+      - op: replace
+        path: /spec/template/spec/containers/0/image
+        value: typesense/typesense:27.1    # Use specific Typesense version
+
+      # Resource requests configuration
+      - op: replace
+        path: /spec/template/spec/containers/0/resources/requests/memory
+        value: 12Gi                        # Request 12GB memory
+      - op: replace
+        path: /spec/template/spec/containers/0/resources/requests/cpu
+        value: 500m                        # Request 0.5 CPU cores
+
+      # Resource limits configuration
+      - op: replace
+        path: /spec/template/spec/containers/0/resources/limits/memory
+        value: 32Gi                        # Limit to 32GB memory
+      - op: replace
+        path: /spec/template/spec/containers/0/resources/limits/cpu
+        value: 2                           # Limit to 2 CPU cores
+
+      # Storage configuration
+      - op: replace
+        path: /spec/volumeClaimTemplates/0/spec/resources/requests/storage
+        value: 64Gi                        # Request 64GB storage
+      - op: replace
+        path: /spec/volumeClaimTemplates/0/spec/accessModes/0
+        value: ReadWriteOnce               # Single-node read/write access

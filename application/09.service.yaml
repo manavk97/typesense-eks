@@ -1,0 +1,35 @@
+# NodePort Service definition for external access to Typesense
+# Exposes the Typesense cluster to external clients
+# Makes the service accessible through the Node's IP address
+
+# apiVersion: Specifies which version of the Kubernetes API to use
+apiVersion: v1
+
+# kind: Defines this as a Service resource
+# Services provide stable networking and exposure for pods
+kind: Service
+
+# metadata: Resource identification and configuration
+metadata:
+  # name: Name for this service, used for external access
+  name: exposed-service
+  # namespace: Must match other Typesense resources
+  namespace: experiment
+
+# spec: The desired state for the Service
+spec:
+  # type: NodePort exposes the service on each Node's IP
+  # at a static port (automatically assigned unless specified)
+  type: NodePort
+
+  # selector: Determines which pods receive traffic from this service
+  # Matches the labels defined in the StatefulSet
+  selector:
+    app: typesense
+
+  # ports: Define which ports are exposed by this service
+  ports:
+  - name: http                # Descriptive name for the port
+    port: 8108               # Port exposed internally in the cluster
+    targetPort: 8108         # Port on the pod where traffic is sent
+    protocol: TCP            # Network protocol to use
