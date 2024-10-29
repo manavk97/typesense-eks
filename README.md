@@ -1,5 +1,6 @@
 # typesense-eks
-Self-hosted elastic search database - Typesense
+
+A complete solution guide for self-hosting Typesense elastic search database on Amazon EKS (Elastic Kubernetes Service)
 
 
 # EKS Cluster Setup Instructions
