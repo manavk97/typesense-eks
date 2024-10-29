@@ -123,51 +123,50 @@ Follow these steps to deploy Typesense using Kustomize:
    - The repository includes a GitHub Actions workflow in `.github/workflows/aws.yml`
    - The pipeline automatically deploys Typesense when changes are pushed:
      ```yaml
-     # Example workflow configuration
      name: Deploy to EKS
 
-   on:
-   push:
-      branches: [ development ]
+     on:
+      push:
+         branches: [ development, main  ]
 
-   jobs:
+     jobs:
 
-   build:
-      
-      name: Deployment
-      runs-on: ubuntu-latest
-      environment: ${{ github.ref == 'refs/heads/main' && 'production' || 'development' }}
-      
-      steps:
-
-      - name: Set short git commit SHA
-         id: commit
-         uses: prompt/actions-commit-hash@v2
-
-      - name: Check out code
-         uses: actions/checkout@v2
-      
-      - name: Configure AWS credentials
-         uses: aws-actions/configure-aws-credentials@v1
-         with:
-         aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
-         aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
-         aws-region: ${{ secrets.AWS_REGION }}
-
-      - name: Login to Amazon ECR
-         id: login-ecr
-         uses: aws-actions/amazon-ecr-login@v1
-
-      - name: Update kube config
-         env:
-         EKS_CLUSTER_NAME: ${{ secrets.EKS_CLUSTER_NAME }}
-         AWS_REGION: ${{ secrets.AWS_REGION }}
+       build:
+    
+         name: Deployment
+         runs-on: ubuntu-latest
+         environment: ${{ github.ref == 'refs/heads/main' && 'production' || 'development' }}
          
-         run: aws eks update-kubeconfig --name $EKS_CLUSTER_NAME --region $AWS_REGION
+         steps:
 
-      - name: Deploy to EKS
-         run: |
-         kubectl apply -k  environments/${{ github.ref == 'refs/heads/main' && 'production' || 'development' }}/.
+         - name: Set short git commit SHA
+            id: commit
+            uses: prompt/actions-commit-hash@v2
+
+         - name: Check out code
+            uses: actions/checkout@v2
+         
+         - name: Configure AWS credentials
+            uses: aws-actions/configure-aws-credentials@v1
+            with:
+            aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+            aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+            aws-region: ${{ secrets.AWS_REGION }}
+
+         - name: Login to Amazon ECR
+            id: login-ecr
+            uses: aws-actions/amazon-ecr-login@v1
+
+         - name: Update kube config
+            env:
+            EKS_CLUSTER_NAME: ${{ secrets.EKS_CLUSTER_NAME }}
+            AWS_REGION: ${{ secrets.AWS_REGION }}
+            
+            run: aws eks update-kubeconfig --name $EKS_CLUSTER_NAME --region $AWS_REGION
+
+         - name: Deploy to EKS
+            run: |
+            kubectl apply -k  environments/${{ github.ref == 'refs/heads/main' && 'production' || 'development' }}/.
      ```
 
    Required GitHub Secrets:
@@ -244,3 +243,8 @@ If you find a bug or have a feature request:
    - Your environment details
 
 For questions or discussions, please use the repository's Discussions section.
+
+Future scope
+- setup backup and restore for typesense
+- setup monitoring and alerting for typesense
+- setup autoscaling for typesense
