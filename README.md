@@ -244,7 +244,7 @@ If you find a bug or have a feature request:
 
 For questions or discussions, please use the repository's Discussions section.
 
-Future scope
+### Future scope
 - setup backup and restore for typesense
 - setup monitoring and alerting for typesense
 - setup autoscaling for typesense
